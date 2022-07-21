@@ -48,7 +48,6 @@ const encryptedString = await readlineInterface.questionAsync(
 
 const serverUrl = new URL(server.url);
 serverUrl.searchParams.set('string', encryptedString);
-serverUrl.searchParams.set('method', 'decrypt');
 
 for (;;) {
   const guess = await readlineInterface.questionAsync(
