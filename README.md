@@ -15,10 +15,19 @@ $ npm i
 ## Usage
 
 ```bash
-$ node . # starts on :8000
-$ node . 4545 # starts on :4545
+$ npm run interactive # starts on :8000
+$ npm run interactive 4545 # starts on :4545
+
+$ npm run wordlist list.txt # starts on :8000
+$ npm run wordlist list.txt 1919 # starts on :1919
 ```
+
+### Interactive mode
 
 You will be prompted to enter your AES-encrypted string, and after doing so you will enter guessing mode. All you then have to do is type your guess and hit `Enter`, then do it again, and again, and again, and again, and again... until you maybe guess it.
 
 Additionally, you can press `Enter` with no input to see a list of all your previous guesses.
+
+### Wordlist mode
+
+You must specify a file that has the AES-encrypted string on the first line and every guess on its own new line after it. This mode will check every guess (line) of the file and log all the successful results. The file may have any extension or none at all.

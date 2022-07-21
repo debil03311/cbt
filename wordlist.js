@@ -1,8 +1,11 @@
-import readlinePromise from 'readline-promise';
-import { stdin, stdout } from 'node:process';
+import { argv, exit } from 'node:process';
+import { readFileSync } from 'node:fs';
 
 import axios from 'axios';
 import phpServer from 'php-server';
+
+if (!argv[2])
+  throw new Error('No file specified.');
 
 const colors = {
   reset: '\x1b[0m',
@@ -15,16 +18,14 @@ const colors = {
 }
 
 const colorize =(text, color)=> color + text + colors.reset;
-const readline = readlinePromise.default;
 
-const readlineInterface = readline.createInterface({
-  input: stdin,
-  output: stdout,
-  termina: true,
-});
+const guesses = readFileSync(argv[2], 'utf-8').split('\n');
+console.log(colorize(`Found ${argv[2]}`, colors.green));
+
+const encryptedString = guesses.shift();
 
 const server = await phpServer({
-  port: parseInt(process.argv[2]) || 8000,
+  port: parseInt(process.argv[3]) || 8000,
   router: './aes.php',
 });
 
@@ -32,35 +33,14 @@ console.log(colorize(
   `PHP server started on ${server.url}`,
   colors.yellow));
 
-process.on('exit', ()=> {
-  readlineInterface.close();
-  server.stop();
-});
-
 const RESULT_PADDER = '----------------';
 const BIT_SIZES = [128, 192, 256];
-const guessHistory = [];
-
-const encryptedString = await readlineInterface.questionAsync(
-  '\nEncrypted string: ');
 
 const serverUrl = new URL(server.url);
 serverUrl.searchParams.set('string', encryptedString);
 
-for (;;) {
-  const guess = await readlineInterface.questionAsync(
-    colorize('\n[GUESS] ', colors.cyan));
-
-  if (!guess) {
-    console.log(
-      colorize('Tried:', colors.yellow),
-      guessHistory.sort().join(colorize(', ', colors.yellow)) )
-
-    continue;
-  }
-
+for (const guess of guesses) {
   serverUrl.searchParams.set('key', guess);
-  guessHistory.push(guess);
 
   for (const bits of BIT_SIZES) {
     serverUrl.searchParams.set('bits', bits);
@@ -68,10 +48,12 @@ for (;;) {
 
     if (response.data) {
       console.log(colorize(
-        `${RESULT_PADDER} ${bits}bit key ${RESULT_PADDER}`,
+        `\n${bits}bit key: ${guess}`,
         colors.green));
 
       console.log(response.data);
     }
   }
 }
+
+server.stop();
